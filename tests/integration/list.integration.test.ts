@@ -1,7 +1,7 @@
 import supertest from 'supertest';
-import app from '../../src/app.js'; // Import the Express app
+import app from '../../src/app'; // Import the Express app
 import mongoose from 'mongoose';
-import { MyListModel } from '../../src/models/MyList.model.js';
+import { MyListModel } from '../../src/models/MyList.model';
 
 const request = supertest(app);
 const MOCK_USER_ID = 'user-12345'; // Matches the controller mock ID
@@ -47,12 +47,11 @@ describe('My List API Integration Tests', () => {
     it('2. should return 200 and success message if attempting to add a duplicate item (No change)', async () => {
         // First add
         await request.post('/api/v1/list').send(movieContent).expect(201);
-
         // Second add (duplicate)
         const res = await request
             .post('/api/v1/list')
             .send(movieContent)
-            .expect(200); 
+            .expect(200);
 
         expect(res.body.message).toBe('Item was already in the list.');
 
@@ -91,18 +90,22 @@ describe('My List API Integration Tests', () => {
     // --- LIST MY ITEMS (GET) ---
 
     it('5. should successfully list items with pagination (Page 1)', async () => {
+        const TOTAL_DELAY_MS = 25 * 1000;
         // Setup: Add 25 items for pagination
         for (let i = 0; i < 25; i++) {
+            const delay = i * 1000; // 0 for item-1, 24000 for item-25
+            // Item-1 (i=0): Date.now() - (25000 - 0) = OLDEST
+            // Item-25 (i=24): Date.now() - (25000 - 24000) = NEWEST (1 second ago)
+            const timestamp = Date.now() - (TOTAL_DELAY_MS - delay);
             await MyListModel.updateOne(
                 { userId: MOCK_USER_ID },
-                { $addToSet: { contentIds: { contentId: `item-${i + 1}`, contentType: 'Movie', addedAt: new Date(Date.now() - i * 1000) } } }, 
+                { $addToSet: { contentIds: { contentId: `item-${i + 1}`, contentType: 'Movie', addedAt: new Date(timestamp) } } }, 
                 { upsert: true }
             );
         }
 
         // Action: Get Page 1
         const res1 = await request.get('/api/v1/list?page=1').expect(200);
-
         // Verification
         expect(res1.body.items).toHaveLength(20);
         expect(res1.body.totalItems).toBe(25);
@@ -114,10 +117,15 @@ describe('My List API Integration Tests', () => {
     
     it('6. should return the correct remaining items on Page 2', async () => {
         // Setup: Add 25 items
+        const TOTAL_DELAY_MS = 25 * 1000;
          for (let i = 0; i < 25; i++) {
+            const delay = i * 1000; // 0 for item-1, 24000 for item-25
+            // Item-1 (i=0): Date.now() - (25000 - 0) = OLDEST
+            // Item-25 (i=24): Date.now() - (25000 - 24000) = NEWEST (1 second ago)
+            const timestamp = Date.now() - (TOTAL_DELAY_MS - delay);
             await MyListModel.updateOne(
                 { userId: MOCK_USER_ID },
-                { $addToSet: { contentIds: { contentId: `item-${i + 1}`, contentType: 'Movie', addedAt: new Date(Date.now() - i * 1000) } } },
+                { $addToSet: { contentIds: { contentId: `item-${i + 1}`, contentType: 'Movie', addedAt: new Date(timestamp) } } },
                 { upsert: true }
             );
         }

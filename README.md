@@ -72,13 +72,13 @@ PORT=3000
 
 | Command       | Description                          |
 | ------------- | ------------------------------------ |
-| `npm start`   | Run in production mode (ts-node)     |
+| `npm start`   | Run in production mode               |
 | `npm run dev` | Run in development mode with nodemon |
 
 API Base URL:
 
 ```
-http://localhost:3000/api/v1/list
+https://my-list-service-sdyq.onrender.com/api/v1/list
 ```
 
 ---

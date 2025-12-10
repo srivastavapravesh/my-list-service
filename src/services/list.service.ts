@@ -17,24 +17,40 @@ const getOrCreateList = async (userId: string): Promise<MyListDocument> => {
 /**
  * Core function for Add to My List. Uses $addToSet for atomic, non-duplicate addition.
  */
-export const addToMyList = async (userId: string, contentId: string, contentType: 'Movie' | 'TVShow') => {
-    // Upsert: Find the document by userId and update it. If not found, create it.
-    const result = await MyListModel.updateOne(
-        { userId },
-        {
-            $addToSet: { // $addToSet is key: only adds if contentId is not already present
-                contentIds: {
-                    contentId,
-                    contentType,
-                    addedAt: new Date(),
-                },
-            },
-        },
-        { upsert: true } // Creates the document if it doesn't exist
-    );
+export const addToMyList = async (userId: string, contentId: string, contentType: string): Promise<boolean> => {
+    
+    // 1. Check if the item already exists using $elemMatch on the contentId
+    const exists = await MyListModel.exists({
+        userId: userId,
+        'contentIds.contentId': contentId // Check if contentId exists in the array
+    });
+    
+    if (exists) {
+        // Item is already in the list; return false (not added)
+        return false;
+    }
 
-    // Check if a modification occurred (item was added)
-    return result.modifiedCount > 0 || result.upsertedCount > 0;
+    // 2. If it does not exist, add it using the $push operator (or $addToSet, which now won't trigger the uniqueness check)
+    // We use $push here because we've already manually checked for uniqueness, and $push is simpler.
+    const updateResult = await MyListModel.updateOne(
+        { userId: userId },
+        { 
+            $push: { // Use $push to add the item since we confirmed it's not a duplicate
+                contentIds: { 
+                    contentId, 
+                    contentType, 
+                    addedAt: new Date() // Date is added here
+                } 
+            }
+        },
+        { upsert: true }
+    );
+    
+    // Log the result here if needed, but the return statement is clean
+    // console.log("Update Result:", updateResult); 
+
+    // Return true if the document was modified or newly created
+    return updateResult.modifiedCount > 0 || updateResult.upsertedCount > 0;
 };
 
 /**

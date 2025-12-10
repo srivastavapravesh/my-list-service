@@ -37,4 +37,4 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 3000
 
 # The command to run the application (must point to the compiled .js file)
-CMD ["node", "dist/app.js"]
+CMD ["node", "dist/src/app.js"]
