@@ -1,0 +1,15 @@
+// tsconfig.test.json (Test Config)
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Override/Add test-specific types
+    "types": ["node", "jest"],
+    // Output directory (can be ignored since Jest handles compilation)
+    "rootDir": "./" 
+  },
+  // Include both source and test files for compilation during testing
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ]
+}
