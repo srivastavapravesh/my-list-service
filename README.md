@@ -49,7 +49,7 @@ my-list-service/
 ## 🛠️ Installation
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/srivastavapravesh/my-list-service.git
 cd my-list-service
 npm install
 ```
